@@ -16,6 +16,17 @@ namespace WebTests.RegressionTests
             return page;
         }
 
+        private async Task<IPage> OpenMenuAsync()
+        {
+            var page = await GoToIntegrationStudioAsync();
+            var menuButton = page.Locator("[aria-label='Open menu']:visible").First;
+            await Expect(menuButton).ToBeVisibleAsync();
+            await menuButton.ClickAsync();
+            var menu = page.Locator("section.mdc-suite-menu.mdc-menu-surface--open");
+            await Expect(menu).ToBeVisibleAsync();
+            return page;
+        }
+
         [Test]
         public async Task OpenIntegrationStudio_Dashboard()
         {
@@ -90,15 +101,7 @@ namespace WebTests.RegressionTests
         [Test]
         public async Task OpenMenu_ShouldContain_TenantName()
         {
-            var page = await GoToIntegrationStudioAsync();
-            var menuButton = page.Locator("[aria-label='Open menu']:visible").First;
-            await Expect(menuButton).ToBeVisibleAsync();
-
-            await menuButton.ClickAsync();
-
-            var menu = page.Locator("section.mdc-suite-menu.mdc-menu-surface--open");
-            await Expect(menu).ToBeVisibleAsync();
-
+            var page = await OpenMenuAsync();
             await Expect(page.Locator("text=Tenant Test 1")).ToBeVisibleAsync();
 
         }
@@ -106,14 +109,7 @@ namespace WebTests.RegressionTests
         [Test]
         public async Task OpenMenu_ShouldContain_NetworkSpeedTest()
         {
-            var page = await GoToIntegrationStudioAsync();
-            var menuButton = page.Locator("[aria-label='Open menu']:visible").First;
-            await Expect(menuButton).ToBeVisibleAsync();
-
-            await menuButton.ClickAsync();
-
-            var menu = page.Locator("section.mdc-suite-menu.mdc-menu-surface--open");
-            await Expect(menu).ToBeVisibleAsync();
+            var page = await OpenMenuAsync();
             await Expect(page.Locator("text=Network Speed Test")).ToBeVisibleAsync();
 
         }
@@ -122,14 +118,7 @@ namespace WebTests.RegressionTests
         [Test]
         public async Task OpenMenu_ShouldContain_Logout()
         {
-            var page = await GoToIntegrationStudioAsync();
-            var menuButton = page.Locator("[aria-label='Open menu']:visible").First;
-            await Expect(menuButton).ToBeVisibleAsync();
-
-            await menuButton.ClickAsync();
-
-            var menu = page.Locator("section.mdc-suite-menu.mdc-menu-surface--open");
-            await Expect(menu).ToBeVisibleAsync();
+            var page = await OpenMenuAsync();
             await Expect(page.Locator("text=Log Out")).ToBeVisibleAsync();
 
         }
@@ -137,14 +126,7 @@ namespace WebTests.RegressionTests
         [Test]
         public async Task OpenMenu_NetworkSpeedTest_ShouldOpenSpeedTestWindow()
         {
-            var page = await GoToIntegrationStudioAsync();
-            var menuButton = page.Locator("[aria-label='Open menu']:visible").First;
-            await Expect(menuButton).ToBeVisibleAsync();
-
-            await menuButton.ClickAsync();
-
-            var menu = page.Locator("section.mdc-suite-menu.mdc-menu-surface--open");
-            await Expect(menu).ToBeVisibleAsync();
+            var page = await OpenMenuAsync();
 
             var networkSpeedTestButton = page.Locator("[title = 'Network Speed Test']:visible");
 
@@ -164,14 +146,7 @@ namespace WebTests.RegressionTests
         [Test]
         public async Task OpenMenu_Logout_ShouldLogoutUser()
         {
-            var page = await GoToIntegrationStudioAsync();
-            var menuButton = page.Locator("[aria-label='Open menu']:visible").First;
-            await Expect(menuButton).ToBeVisibleAsync();
-
-            await menuButton.ClickAsync();
-
-            var menu = page.Locator("section.mdc-suite-menu.mdc-menu-surface--open");
-            await Expect(menu).ToBeVisibleAsync();
+            var page = await OpenMenuAsync();
 
             var logoutButton = page.Locator("[title = 'Log Out']:visible");
             // Click and wait for any navigation
