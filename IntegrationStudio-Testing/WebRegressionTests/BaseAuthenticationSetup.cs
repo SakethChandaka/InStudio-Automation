@@ -10,10 +10,12 @@ namespace WebTests
     public class BaseAuthenticationState : PageTest
     {
         private const string StorageStatePath = "auth.json";
-        private const string LoginUrl = "https://internal.integrationstudio.capdev-connect.aveva.com/"; // Replace with your actual login URL
         private const string Username = "chssaketh@parnasoft.tech"; // Consider using environment variables
         private const string Password = "Satya@2921"; // Consider using environment variables
         private const string tenantName = "Tenant Test 1"; // Tenant name
+
+        public const string BaseUrl = "https://internal.integrationstudio.capdev-connect.aveva.com/"; // Replace with your actual login URL
+
 
         [OneTimeSetUp]
         public async Task EnsureAuthenticatedAsync()
@@ -39,7 +41,7 @@ namespace WebTests
             try
             {
                 // Navigate to login page
-                await page.GotoAsync(LoginUrl);
+                await page.GotoAsync(BaseUrl);
 
                 // Wait for login form to be visible
                 await page.WaitForLoadStateAsync(LoadState.NetworkIdle);

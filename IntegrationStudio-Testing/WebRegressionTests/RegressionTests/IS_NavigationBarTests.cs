@@ -1,20 +1,29 @@
 ﻿using Microsoft.Playwright;
 using Microsoft.Playwright.NUnit;
 using NUnit.Framework;
+using System.Reflection.Emit;
 using System.Threading.Tasks;
 
 namespace WebTests.RegressionTests
 {
     public class IS_NavigationBarTests : BaseAuthenticationState
     {
+        private async Task<IPage> GoToIntegrationStudioAsync()
+        {
+            var page = await GetAuthenticatedPageAsync();
+            await page.GotoAsync("https://internal.integrationstudio.capdev-connect.aveva.com/");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            return page;
+        }
+
         [Test]
-        public async Task ShouldOpenIntegrationStudioWebsite()
+        public async Task OpenIntegrationStudio_Dashboard()
         {
             // Get an authenticated page instead of using the default Page
-            var page = await GetAuthenticatedPageAsync();
+            var page = await GoToIntegrationStudioAsync();
 
             // Navigate to Integration Studio website
-            await page.GotoAsync("https://internal.integrationstudio.capdev-connect.aveva.com/projects");
+            await page.GotoAsync($"{BaseUrl}/projects");
 
             // Assert title contains "Integration Studio"
             StringAssert.Contains("Integration Studio", await page.TitleAsync());
@@ -27,113 +36,160 @@ namespace WebTests.RegressionTests
         }
 
         [Test]
-        public async Task ShouldNavigateToMainSections()
+        public async Task NotificationsButton_ShouldOpenAndClosePanel()
         {
-            var page = await GetAuthenticatedPageAsync();
+            var page = await GoToIntegrationStudioAsync();
 
-            await page.GotoAsync("https://internal.integrationstudio.capdev-connect.aveva.com/");
+            var notifButton = page.Locator("[aria-label='Notifications']").First;
+            await Expect(notifButton).ToBeVisibleAsync();
 
-            // Wait for page to load
-            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await notifButton.ClickAsync();
+            var notifWindow = page.Locator("#notifyHub:visible");
+            await Expect(notifWindow).ToBeVisibleAsync();
 
-            // Test navigation menu items - adjust selectors based on your actual navbar
-            var navigationItems = new[]
-            {
-                "Dashboard",
-                "Projects",
-                "Integrations",
-                "Settings"
-            };
+            var closeBtn = page.Locator("#notifyHeader [data-testid='CloseIcon']");
+            await closeBtn.ClickAsync();
 
-            foreach (var item in navigationItems)
-            {
-                // Check if navigation item exists - adjust selector as needed
-                var navElement = page.Locator($"nav >> text='{item}'").First;
-                await Expect(navElement).ToBeVisibleAsync();
-
-                // Optionally test clicking each nav item
-                await navElement.ClickAsync();
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
-                // Take screenshot of each section
-                await page.ScreenshotAsync(new()
-                {
-                    Path = $"IntegrationStudio-{item.ToLower()}.png"
-                });
-            }
+            await page.ScreenshotAsync(new() { Path = "IntegrationStudio-notifications.png" });
         }
 
         [Test]
-        public async Task ShouldDisplayUserMenuWhenAuthenticated()
+        public async Task HelpButton_ShouldOpenDocumentationInNewTab()
         {
-            var page = await GetAuthenticatedPageAsync();
+            var page = await GoToIntegrationStudioAsync();
 
-            await page.GotoAsync("https://internal.integrationstudio.capdev-connect.aveva.com/");
-            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var helpButton = page.Locator("[aria-label='Help']").First;
+            await Expect(helpButton).ToBeVisibleAsync();
 
-            // Check if user menu/profile is visible (indicates successful authentication)
-            // Adjust selector based on your actual user menu element
-            var userMenu = page.Locator("[data-testid='user-menu']").Or(
-                           page.Locator(".user-profile")).Or(
-                           page.Locator("button:has-text('Profile')"));
+            var popupTask = page.WaitForPopupAsync();
+            await helpButton.ClickAsync();
+            var helpPage = await popupTask;
 
-            await Expect(userMenu).ToBeVisibleAsync();
+            await helpPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            StringAssert.Contains("AVEVA™ Documentation", await helpPage.TitleAsync());
 
-            // Test user menu dropdown
-            await userMenu.ClickAsync();
-            await Expect(page.Locator("text='Logout'").Or(page.Locator("text='Sign out'"))).ToBeVisibleAsync();
+            await helpPage.ScreenshotAsync(new() { Path = "IntegrationStudio-help.png" });
         }
 
         [Test]
-        public async Task ShouldDisplayCorrectBrandingAndLogo()
+        public async Task OpenMenuButton_ShouldDisplayMenu()
         {
-            var page = await GetAuthenticatedPageAsync();
+            var page = await GoToIntegrationStudioAsync();
 
-            await page.GotoAsync("https://internal.integrationstudio.capdev-connect.aveva.com/");
-            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var menuButton = page.Locator("[aria-label='Open menu']:visible").First;
+            await Expect(menuButton).ToBeVisibleAsync();
 
-            // Check for logo/branding elements - adjust selectors as needed
-            var logo = page.Locator("img[alt*='Integration Studio']").Or(
-                       page.Locator(".logo")).Or(
-                       page.Locator("[data-testid='app-logo']"));
+            await menuButton.ClickAsync();
 
-            await Expect(logo).ToBeVisibleAsync();
+            var menu = page.Locator("section.mdc-suite-menu.mdc-menu-surface--open");
+            await Expect(menu).ToBeVisibleAsync();
 
-            // Verify logo is clickable and returns to home
-            await logo.ClickAsync();
-            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
-            // Should be back on home/dashboard page
-            StringAssert.Contains("Integration Studio", await page.TitleAsync());
+            await page.ScreenshotAsync(new() { Path = "IntegrationStudio-openmenu.png" });
         }
 
         [Test]
-        public async Task ShouldShowNotificationsOrAlertsInNavbar()
+        public async Task OpenMenu_ShouldContain_TenantName()
         {
-            var page = await GetAuthenticatedPageAsync();
+            var page = await GoToIntegrationStudioAsync();
+            var menuButton = page.Locator("[aria-label='Open menu']:visible").First;
+            await Expect(menuButton).ToBeVisibleAsync();
 
-            await page.GotoAsync("https://internal.integrationstudio.capdev-connect.aveva.com/");
-            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await menuButton.ClickAsync();
 
-            // Check for notifications bell or alerts - adjust selector as needed
-            var notificationElement = page.Locator("[data-testid='notifications']").Or(
-                                    page.Locator(".notification-bell")).Or(
-                                    page.Locator("button:has([class*='bell'])"));
+            var menu = page.Locator("section.mdc-suite-menu.mdc-menu-surface--open");
+            await Expect(menu).ToBeVisibleAsync();
 
-            // This might not always be visible, so we'll check if it exists
-            var isVisible = await notificationElement.IsVisibleAsync();
+            await Expect(page.Locator("text=Tenant Test 1")).ToBeVisibleAsync();
 
-            if (isVisible)
-            {
-                await notificationElement.ClickAsync();
-                // Check if notifications panel opens
-                await Expect(page.Locator(".notifications-panel").Or(
-                           page.Locator("[data-testid='notifications-dropdown']"))).ToBeVisibleAsync();
-            }
-            else
-            {
-                TestContext.WriteLine("No notification element found in navbar");
-            }
         }
+
+        [Test]
+        public async Task OpenMenu_ShouldContain_NetworkSpeedTest()
+        {
+            var page = await GoToIntegrationStudioAsync();
+            var menuButton = page.Locator("[aria-label='Open menu']:visible").First;
+            await Expect(menuButton).ToBeVisibleAsync();
+
+            await menuButton.ClickAsync();
+
+            var menu = page.Locator("section.mdc-suite-menu.mdc-menu-surface--open");
+            await Expect(menu).ToBeVisibleAsync();
+            await Expect(page.Locator("text=Network Speed Test")).ToBeVisibleAsync();
+
+        }
+
+
+        [Test]
+        public async Task OpenMenu_ShouldContain_Logout()
+        {
+            var page = await GoToIntegrationStudioAsync();
+            var menuButton = page.Locator("[aria-label='Open menu']:visible").First;
+            await Expect(menuButton).ToBeVisibleAsync();
+
+            await menuButton.ClickAsync();
+
+            var menu = page.Locator("section.mdc-suite-menu.mdc-menu-surface--open");
+            await Expect(menu).ToBeVisibleAsync();
+            await Expect(page.Locator("text=Log Out")).ToBeVisibleAsync();
+
+        }
+
+        [Test]
+        public async Task OpenMenu_NetworkSpeedTest_ShouldOpenSpeedTestWindow()
+        {
+            var page = await GoToIntegrationStudioAsync();
+            var menuButton = page.Locator("[aria-label='Open menu']:visible").First;
+            await Expect(menuButton).ToBeVisibleAsync();
+
+            await menuButton.ClickAsync();
+
+            var menu = page.Locator("section.mdc-suite-menu.mdc-menu-surface--open");
+            await Expect(menu).ToBeVisibleAsync();
+
+            var networkSpeedTestButton = page.Locator("[title = 'Network Speed Test']:visible");
+
+            var popupTask = page.WaitForPopupAsync();
+            await networkSpeedTestButton.ClickAsync();
+            var networkSpeedTestPage = await popupTask;
+
+            await networkSpeedTestPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await Expect(networkSpeedTestPage).ToHaveURLAsync(
+                "https://internal.integrationstudio.capdev-connect.aveva.com/speedtest"
+            );
+
+            await networkSpeedTestPage.ScreenshotAsync(new() { Path = "IntegrationStudio-help.png" });
+
+        }
+
+        [Test]
+        public async Task OpenMenu_Logout_ShouldLogoutUser()
+        {
+            var page = await GoToIntegrationStudioAsync();
+            var menuButton = page.Locator("[aria-label='Open menu']:visible").First;
+            await Expect(menuButton).ToBeVisibleAsync();
+
+            await menuButton.ClickAsync();
+
+            var menu = page.Locator("section.mdc-suite-menu.mdc-menu-surface--open");
+            await Expect(menu).ToBeVisibleAsync();
+
+            var logoutButton = page.Locator("[title = 'Log Out']:visible");
+            // Click and wait for any navigation
+            var navigationTask = page.WaitForNavigationAsync(new() { WaitUntil = WaitUntilState.NetworkIdle });
+            await logoutButton.ClickAsync();
+            await navigationTask;
+
+            // Now explicitly wait until we land on the final login page
+            await page.WaitForURLAsync(new Regex("https://signin\\.dev-connect\\.aveva\\.com/.*login.*"));
+
+            // Assert
+            await Expect(page).ToHaveURLAsync(new Regex("https://signin\\.dev-connect\\.aveva\\.com/.*login.*"));
+
+            await page.ScreenshotAsync(new()
+            {
+                Path = "IntegrationStudio-logout.png"
+            });
+        }
+
     }
 }
