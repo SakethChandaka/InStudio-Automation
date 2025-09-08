@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WebTests.RegressionTests
 {
-    public class IS_NavigationBarTests : BaseAuthenticationState
+    public class NavigationBar_Tests : BaseAuthenticationState
     {
         private async Task<IPage> GoToIntegrationStudioAsync()
         {
