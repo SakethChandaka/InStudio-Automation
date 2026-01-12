@@ -1,1 +1,1 @@
-# InStudio-RegressionAutomation
+# InStudio-Automation-Repository
