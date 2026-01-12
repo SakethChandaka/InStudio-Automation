@@ -10,6 +10,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="Utilities\Config\AutomationWorkerConfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Utilities\Config\CoreFunctionalTestsConfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Microsoft.Playwright" Version="1.54.0" />
@@ -27,7 +36,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Utilities\" />
+    <Folder Include="CoreFunctionalTests\RDPRule\" />
+    <Folder Include="CoreFunctionalTests\SystemSuite\" />
+    <Folder Include="RegressionTests\" />
   </ItemGroup>
 
 </Project>

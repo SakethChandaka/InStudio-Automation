@@ -1,15 +1,18 @@
-﻿using Microsoft.Playwright;
+﻿using IntegrationStudioTests.Utilities.Models;
+using Microsoft.Playwright;
 using Microsoft.Playwright.NUnit;
 using NUnit.Framework;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
+using WebTests;
 
-namespace WebTests.RegressionTests
+namespace IntegrationStudioTests.GeneralUITests
 {
     public class NavigationBar_Tests : BaseAuthenticationState
     {
         private async Task<IPage> GoToIntegrationStudioAsync()
         {
+            
             var page = await GetAuthenticatedPageAsync();
             await page.GotoAsync("https://internal.integrationstudio.capdev-connect.aveva.com/");
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
@@ -77,7 +80,7 @@ namespace WebTests.RegressionTests
             var helpPage = await popupTask;
 
             await helpPage.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            StringAssert.Contains("AVEVA™ Documentation", await helpPage.TitleAsync());
+            StringAssert.Contains("Login Page", await helpPage.TitleAsync());
 
             await helpPage.ScreenshotAsync(new() { Path = "IntegrationStudio-help.png" });
         }

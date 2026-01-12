@@ -4,22 +4,37 @@ using NUnit.Framework;
 using System.Threading.Tasks;
 using static System.Net.WebRequestMethods;
 using System.IO;
+using System.Text.Json;
+using IntegrationStudioTests.Utilities.Models;
+using System.ComponentModel;
 
 namespace WebTests
 {
+  
     public class BaseAuthenticationState : PageTest
     {
-        private const string StorageStatePath = "auth.json";
-        private const string Username = "chssaketh@parnasoft.tech"; // Consider using environment variables
-        private const string Password = "Satya@2921"; // Consider using environment variables
-        private const string tenantName = "Tenant Test 1"; // Tenant name
+        private static readonly string BaseAppConfigDirectory = Path.Combine(AppContext.BaseDirectory, "Utilities", "Config", "CoreFunctionalTestsConfig.json");
 
-        public const string BaseUrl = "https://internal.integrationstudio.capdev-connect.aveva.com/"; // Replace with your actual login URL
+        public class Config
+        {
+            public static AdminUserData Settings = JsonSerializer.Deserialize<AdminUserData>(System.IO.File.ReadAllText(BaseAppConfigDirectory)) ?? throw new Exception("Failed to read config Json");
+        }
+
+        private string Username;
+        private string Password;
+        private string tenantName;
+
+        private const string StorageStatePath = "auth.json";
+        public const string BaseUrl = "https://verify.integrationstudio.dev-connect.aveva.com/"; // Replace with your actual login URL
 
 
         [OneTimeSetUp]
         public async Task EnsureAuthenticatedAsync()
         {
+            Username = Config.Settings.AdminUser.username; // Change to environment variables in Future
+            Password = Config.Settings.AdminUser.password; // Change to environment variables
+            tenantName = Config.Settings.AdminUser.tenant; // Tenant name
+
             if (!System.IO.File.Exists(StorageStatePath))
             {
                 await CreateAuthenticationStateAsync();
